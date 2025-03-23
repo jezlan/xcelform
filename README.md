@@ -69,6 +69,6 @@ Feel free to open issues or submit pull requests to improve the app.
 
 ## 📄 **License**
 This project is licensed under the MIT License.  
-See the [LICENSE](./LICENSE) file for more details.  
+See the [LICENSE](./license.txt) file for more details.  
 
 ---
