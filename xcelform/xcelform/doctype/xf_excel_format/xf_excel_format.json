@@ -1,0 +1,114 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:name1",
+ "creation": "2025-03-20 16:10:28.647798",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "name1",
+  "doc_type",
+  "column_break_tsae",
+  "enable",
+  "is_default",
+  "custom_format",
+  "section_break_hxbh",
+  "python_script",
+  "notice",
+  "section_break_rtyw",
+  "xf_excel_format_help"
+ ],
+ "fields": [
+  {
+   "fieldname": "name1",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "doc_type",
+   "fieldtype": "Link",
+   "label": "Doctype",
+   "options": "DocType"
+  },
+  {
+   "fieldname": "column_break_tsae",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "0",
+   "fieldname": "enable",
+   "fieldtype": "Check",
+   "label": "Enable"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "label": "Is Default "
+  },
+  {
+   "default": "1",
+   "fieldname": "custom_format",
+   "fieldtype": "Check",
+   "label": "Custom Format"
+  },
+  {
+   "fieldname": "section_break_hxbh",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.custom_format == 1",
+   "fieldname": "python_script",
+   "fieldtype": "Code",
+   "label": "Python Script",
+   "options": "Python"
+  },
+  {
+   "depends_on": "eval:doc.custom_format == 0",
+   "fieldname": "notice",
+   "fieldtype": "HTML",
+   "label": "Coming Soon ",
+   "options": "<strong style=\"color: #ff8c00; font-size: 14px;\">Coming Soon!</strong>\n<span style=\"color: #444; font-size: 13px; margin-left: 5px;\">\n    A feature to import or auto-generate formats will be available soon. Stay tuned for updates!\n</span>\n"
+  },
+  {
+   "fieldname": "section_break_rtyw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "depends_on": "eval:doc.custom_format == 1 ",
+   "fieldname": "xf_excel_format_help",
+   "fieldtype": "HTML",
+   "label": "XF Excel Format Help",
+   "options": "<h3>Excel Format Help</h3>\n<hr>\n<h4>Introduction</h4>\n<p>Excel Formats are generated using Python scripts in the backend. The <code>doc</code> object contains all the information about the document being exported. Additionally, you can access common utilities via the <code>frappe</code> module.</p>\n<p>For styling and formatting, the <code>openpyxl</code> library is used, and relevant modules like <code>Font</code>, <code>Alignment</code>, <code>Border</code>, <code>Side</code>, <code>PatternFill</code>, and <code>Image</code> are pre-imported for use in your script.</p>\n<hr>\n<h4>References</h4>\n<ol>\n    <li><a href=\"https://openpyxl.readthedocs.io/en/stable/\" target=\"_blank\">OpenPyXL Documentation</a></li>\n    <li><a href=\"https://frappeframework.com/docs\" target=\"_blank\">Frappe Framework Documentation</a></li>\n</ol>\n<hr>\n<h4>Example Script</h4>\n<pre><code># Access pre-imported modules\nwb = wb  # Workbook object\nws = wb.active  # Active worksheet\nws.title = doc.name  # Set sheet name as document name\n\n# Set header styles\nheader_font = Font(bold=True)\nalignment_center = Alignment(horizontal='center')\nthin_border = Border(left=Side(style='thin'), right=Side(style='thin'), top=Side(style='thin'), bottom=Side(style='thin'))\n\n# Add header row\nheaders = ['Item', 'Quantity', 'Rate', 'Amount']\nfor col_num, header in enumerate(headers, 1):\n    cell = ws.cell(row=1, column=col_num, value=header)\n    cell.font = header_font\n    cell.alignment = alignment_center\n    cell.border = thin_border\n\n# Add data rows using doc object\nrow = 2\nfor item in doc.items:\n    ws.cell(row=row, column=1, value=item.item_name)\n    ws.cell(row=row, column=2, value=item.qty)\n    ws.cell(row=row, column=3, value=item.rate)\n    ws.cell(row=row, column=4, value=item.amount)\n    row += 1\n\n# Apply column width\nfor col in range(1, 5):\n    ws.column_dimensions[get_column_letter(col)].width = 15\n\n# Save Excel output (handled automatically by the export function)\n</code></pre>\n<hr>\n<h4>Available Modules</h4>\n<ul>\n    <li><code>doc</code>: Document object that holds all form data</li>\n    <li><code>wb</code>: Excel Workbook</li>\n    <li><code>ws</code>: Worksheet (to be set manually)</li>\n    <li><code>Font</code>: Style text fonts</li>\n    <li><code>Alignment</code>: Align text in cells</li>\n    <li><code>Border</code>: Set borders for cells</li>\n    <li><code>Side</code>: Define border sides</li>\n    <li><code>PatternFill</code>: Add background color</li>\n    <li><code>Image</code>: Insert images</li>\n    <li><code>get_column_letter</code>: Get Excel column letter</li>\n</ul>\n<hr>\n<h4>Common Functions</h4>\n<table class=\"table table-bordered\">\n    <tbody>\n        <tr>\n            <td style=\"width: 30%;\"><code>doc.get_formatted('[fieldname]', [parent_doc])</code></td>\n            <td>Get document value formatted as Date, Currency, etc. Pass parent <code>doc</code> for currency type fields.</td>\n        </tr>\n        <tr>\n            <td style=\"width: 30%;\"><code>frappe.db.get_value('[doctype]', '[name]', 'fieldname')</code></td>\n            <td>Get value from another document.</td>\n        </tr>\n        <tr>\n            <td style=\"width: 30%;\"><code>frappe.utils.formatdate(date_string)</code></td>\n            <td>Format date to a readable string.</td>\n        </tr>\n        <tr>\n            <td style=\"width: 30%;\"><code>frappe.get_doc('[doctype]', '[name]')</code></td>\n            <td>Fetch a document for advanced data manipulation.</td>\n        </tr>\n    </tbody>\n</table>\n"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-03-23 21:47:13.656450",
+ "modified_by": "Administrator",
+ "module": "XcelForm",
+ "name": "XF Excel Format",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
