@@ -17,7 +17,7 @@ You are welcome to **test, explore, and contribute**! 🚀
 ✅ Export any Doctype data into Excel with custom formats  
 ✅ Define multiple Excel templates for the same Doctype  
 ✅ Easy-to-use interface to create, manage, and apply Excel formats  
-✅ Preview feature to test the format before export  
+🧪 **Excel Preview feature** to test the format before export (**🔬 In Testing Stage**)  
 ✅ **Attach or Download Excel:** Option to attach Excel to the document or directly download it  
 
 ---
@@ -38,13 +38,15 @@ bench --site your-site-name install-app xcelform
 1. Go to the respective Doctype.
 2. Click on **XF Excel Format**.
 3. Select the desired format.
-4. Choose whether to **attach** the file to the document or **download** it.
-5. Export the customized Excel file!  
+4. Click **Preview** to test the format (currently in testing phase).
+5. Choose whether to **attach** the file to the document or **download** it.
+6. Export the customized Excel file!  
 
 ---
 
 ## ⚡️ **How It Works**
-- **Excel Formats:** Define custom Excel formats in the **XF Excel Format** Doctype.  
+- **Excel Formats:** Define custom Excel formats in the **XF Excel Format** Doctype.
+- **Excel Preview(🔬 Testing):** Allows users to preview the Excel layout and formatting before export.
 - **Attach or Download:** Users can choose to attach the Excel file to the document or download it.  
 - **Export Confirmation:** A success message appears when the file is attached or downloaded.  
 

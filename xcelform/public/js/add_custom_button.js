@@ -116,6 +116,35 @@ function show_excel_format_dialog(frm) {
             });
           }
         },
+        secondary_action_label: __("Preview"),
+        secondary_action(values) {
+          console.log("hiii")
+          frappe.call({
+            method: "xcelform.xcelform.hooks.xf_excel_utils.export_to_xf_excel",
+            args: {
+                doctype: frm.doc.doctype,
+                doc_name: frm.doc.name,
+                excel_format: values.excel_format,
+                is_preview: 1
+            },
+            callback: function (r) {
+              if (r.message) {
+                let previewHtml = r.message.preview;
+                let dialog = new frappe.ui.Dialog({
+                    title: "Excel Preview",
+                    fields: [
+                        {
+                            fieldtype: "HTML",
+                            fieldname: "preview",
+                            options: `<div style="overflow:auto; max-height:500px;">${previewHtml}</div>`
+                        }
+                    ]
+                });
+                dialog.show();
+            }
+            }
+        });
+        }
       });
 
       d.show();
