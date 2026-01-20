@@ -36,9 +36,11 @@ def export_to_xf_excel(
     if not excelFormat:
         frappe.throw("Enabled Excel Format not defined for this Doctype")
 
+    wb = openpyxl.Workbook()
+    ws = wb.active
     context = {
-        "wb": openpyxl.Workbook(),
-        "ws": None,
+        "wb": wb,
+        "ws": ws,
         "Font": Font,
         "doc": doc,
         "Alignment": Alignment,
@@ -48,9 +50,10 @@ def export_to_xf_excel(
         "PatternFill": PatternFill,
         "Image": Image,
     }
-
+    
     exec(excelFormat, context)
-
+    
+        
     ws = context["ws"]
 
     from io import BytesIO
