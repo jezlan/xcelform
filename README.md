@@ -1,9 +1,12 @@
+<p align="center">
+  <img src="assets/xcelform_log_sqr.png" alt="XcelForm Logo" width="140"/>
+</p>
 
----
+<h1 align="center">📊 XcelForm</h1>
 
-## 📊 **XcelForm**
-
-⚡️ **XcelForm** is a Frappe/ERPNext app that allows you to export data to Excel with custom formats and designs—just like print formats! 🎯  
+<p align="center">
+<b>XcelForm</b> is a Frappe/ERPNext app that allows you to export data to Excel with custom formats and designs — just like print formats!
+</p>
 
 ---
 
