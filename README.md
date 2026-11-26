@@ -33,7 +33,12 @@ bench get-app xcelform https://github.com/jezlan/xcelform.git
 
 # Install on your site
 bench --site your-site-name install-app xcelform
+
+# Allow Excel format scripts to run (they run in Frappe's server-script sandbox)
+bench set-config -g server_script_enabled 1
 ```
+
+Excel format scripts run in Frappe's sandbox, the same one Server Scripts use. Inside a script you can use `doc`, `wb`, `ws`, `frappe` (the safe version), and the openpyxl helpers `Font`, `Alignment`, `Border`, `Side`, `PatternFill`, `Image` and `get_column_letter`. Imports are limited to `from openpyxl... import Name`.
 
 ---
 
