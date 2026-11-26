@@ -1,3 +1,5 @@
+const XF_EXPORT_METHOD = "xcelform.xcelform.hooks.xf_excel_utils.export_to_xf_excel";
+
 $(document).on("app_ready", function () {
   frappe.call({
     method: "xcelform.xcelform.hooks.get_allowed_doctypes.get_doctypes",
@@ -5,12 +7,8 @@ $(document).on("app_ready", function () {
       if (r.message) {
         $.each(r.message, function (i, doctype) {
           frappe.ui.form.on(doctype.doc_type, {
-            setup: function (frm) {
-              frm.add_custom_button(__("XF Excel Export"), function () {
-                show_excel_format_dialog(frm);
-              });
-            },
             refresh: function (frm) {
+              if (frm.is_new()) return;
               frm.add_custom_button(__("XF Excel Export"), function () {
                 show_excel_format_dialog(frm);
               });
@@ -21,6 +19,18 @@ $(document).on("app_ready", function () {
     },
   });
 });
+
+function validate_excel_format(values) {
+  if (!values.excel_format) {
+    frappe.msgprint({
+      title: __("Validation Error"),
+      message: __("Select an Excel format!"),
+      indicator: "red",
+    });
+    return false;
+  }
+  return true;
+}
 
 function show_excel_format_dialog(frm) {
   frappe.call({
@@ -60,20 +70,11 @@ function show_excel_format_dialog(frm) {
         ],
         primary_action_label: __("Export"),
         primary_action(values) {
-          if (!values.excel_format) {
-            frappe.msgprint({
-              title: __("Validation Error"),
-              message: __("Select an Excel format!"),
-              indicator: "red",
-            });
-            return;
-          }
+          if (!validate_excel_format(values)) return;
           if (!values.attach && !values.download) {
             frappe.msgprint({
               title: __("Validation Error"),
-              message: __(
-                "Select either 'Attach to Document' or 'Download Excel'."
-              ),
+              message: __("Select either 'Attach to Document' or 'Download Excel'."),
               indicator: "red",
             });
             return;
@@ -85,66 +86,61 @@ function show_excel_format_dialog(frm) {
             excel_format: values.excel_format,
           };
 
-          // Attach option
           if (values.attach) {
-            args.attach = 1;
             frappe.call({
-              method:
-                "xcelform.xcelform.hooks.xf_excel_utils.export_to_xf_excel",
-              args: args,
+              method: XF_EXPORT_METHOD,
+              args: { ...args, attach: 1 },
+              freeze: true,
               callback: function (r) {
                 if (r.message) {
-                  frappe.msgprint(__("Excel file attached successfully!"));
+                  frappe.show_alert({ message: __("Excel file attached"), indicator: "green" });
+                  frm.reload_doc();
                   d.hide();
                 }
               },
             });
           }
 
-          // Download option
           if (values.download) {
-            frappe.msgprint(__("Downloading Excel..."));
-            window.open(
-              frappe.urllib.get_full_url(
-                `/api/method/xcelform.xcelform.hooks.xf_excel_utils.export_to_xf_excel?doctype=${frm.doc.doctype}&doc_name=${frm.doc.name}&excel_format=${values.excel_format}&download=1`
-              )
-            );
+            const params = new URLSearchParams({ ...args, download: 1 });
+            window.open(frappe.urllib.get_full_url(`/api/method/${XF_EXPORT_METHOD}?${params.toString()}`));
             d.hide();
-            frappe.show_alert({
-              message: __("Excel downloaded successfully!"),
-              indicator: "blue",
-            });
+            frappe.show_alert({ message: __("Downloading Excel..."), indicator: "blue" });
           }
         },
         secondary_action_label: __("Preview"),
-        secondary_action(values) {
-          console.log("hiii")
+        secondary_action() {
+          const values = d.get_values();
+          if (!values || !validate_excel_format(values)) return;
+
           frappe.call({
-            method: "xcelform.xcelform.hooks.xf_excel_utils.export_to_xf_excel",
+            method: XF_EXPORT_METHOD,
             args: {
-                doctype: frm.doc.doctype,
-                doc_name: frm.doc.name,
-                excel_format: values.excel_format,
-                is_preview: 1
+              doctype: frm.doc.doctype,
+              doc_name: frm.doc.name,
+              excel_format: values.excel_format,
+              is_preview: 1,
             },
+            freeze: true,
             callback: function (r) {
-              if (r.message) {
-                let previewHtml = r.message.preview;
+              if (r.message && r.message.preview) {
+                // The server escapes every cell value before building this table.
                 let dialog = new frappe.ui.Dialog({
-                    title: "Excel Preview",
-                    fields: [
-                        {
-                            fieldtype: "HTML",
-                            fieldname: "preview",
-                            options: `<div style="overflow:auto; max-height:500px;">${previewHtml}</div>`
-                        }
-                    ]
+                  title: __("Excel Preview"),
+                  size: "extra-large",
+                  fields: [
+                    {
+                      fieldtype: "HTML",
+                      fieldname: "preview",
+                      options: `<div style="overflow:auto; max-height:500px;">${r.message.preview}</div>`,
+                    },
+                  ],
                 });
                 dialog.show();
-            }
-            }
-        });
-        }
+              }
+            },
+          });
+        },
       });
 
       d.show();
