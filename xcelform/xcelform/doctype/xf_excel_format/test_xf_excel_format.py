@@ -11,10 +11,10 @@ try:
 except ImportError:  # Frappe v15
     from frappe.tests.utils import FrappeTestCase as IntegrationTestCase
 
+from xcelform.core.sandbox import run_format_script
 from xcelform.xcelform.hooks.xf_excel_utils import (
     export_to_xf_excel,
     get_default_excel_format,
-    run_format_script,
 )
 
 FORMAT_NAME = "_Test XF ToDo Format"
@@ -26,10 +26,15 @@ ws.merge_cells("A2:C2")
 ws["A2"] = doc.name
 """
 
+# Only this test's own records are needed. Following the DocType link would make Frappe
+# create sample records from every installed app (ERPNext, HRMS...) and commit them.
+IGNORE_TEST_RECORD_DEPENDENCIES = ["DocType"]
+
 
 class TestXFExcelFormat(IntegrationTestCase):
     def setUp(self):
         self.enterContext(patch("frappe.utils.safe_exec.is_safe_exec_enabled", return_value=True))
+        self.enterContext(patch("frappe.log_error"))  # scripts here fail on purpose
         frappe.set_user("Administrator")
         self.todo = frappe.get_doc({"doctype": "ToDo", "description": "XcelForm test"}).insert()
         self.format = frappe.get_doc(
