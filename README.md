@@ -22,6 +22,7 @@ You are welcome to **test, explore, and contribute**! 🚀
 ✅ Easy-to-use interface to create, manage, and apply Excel formats  
 🧪 **Excel Preview feature** to test the format before export (**🔬 In Testing Stage**)  
 ✅ **Attach or Download Excel:** Option to attach Excel to the document or directly download it  
+✅ **Report Export:** Export Script, Query and Custom Reports to Excel with your own format, using the filters applied on screen  
 
 ---
 
@@ -67,6 +68,38 @@ To enable Excel export for a specific Doctype, follow these steps:
 3. Save the settings.  
 
 ✅ Now the selected Doctype can export Excel using **XcelForm**!  
+
+---
+
+## 📈 **Report Export**
+Export Script Reports, Query Reports and Custom Reports with your own Excel layout.
+
+1. Open **XF Report Excel Format** and click **New**.
+2. Pick the **Report**, tick **Default for this Report** if you like, and edit the script. A working script is filled in for you.
+3. Open the report, set the filters, then choose **XF Excel Export** from the report's menu (⋯).
+4. Click **Preview** to check the layout, or **Download** to get the `.xlsx` file.
+
+The menu item only appears on reports that have an enabled format, and only for users who can open the report.
+
+A report script can use:
+
+| Name | What it is |
+|---|---|
+| `report_name`, `filters` | The report and the filter values applied on screen |
+| `columns` | List of dicts with `fieldname`, `label`, `fieldtype`, `options`, `width` |
+| `data` | Rows as dicts keyed by fieldname (the total row is removed) |
+| `total_row` | The report's total row as a dict, or `None` |
+| `xf.write_table(ws, columns, data, start_row=1, start_col=1, total_row=None, header=True)` | Writes a styled table with number and date formats, returns the next empty row |
+| `xf.autofit_columns(ws)` | Sizes columns to their content |
+
+```python
+ws["A1"] = report_name
+ws["A1"].font = Font(bold=True, size=14)
+xf.write_table(ws, columns, data, start_row=3, total_row=total_row)
+xf.autofit_columns(ws)
+```
+
+Reports set to run in the background (prepared reports) export the last result generated with the same filters. Generate the report first, then export.
 
 ---
 
