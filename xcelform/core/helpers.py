@@ -3,9 +3,10 @@
 import types
 
 import frappe
-from frappe.utils import get_datetime, getdate, strip_html_tags
 from openpyxl.styles import Border, Font, PatternFill, Side
 from openpyxl.utils import get_column_letter
+
+from xcelform.core.values import set_cell_value
 
 HEADER_FILL = PatternFill("solid", start_color="F2F2F2")
 THIN = Side(style="thin", color="BFBFBF")
@@ -78,24 +79,10 @@ def autofit_columns(ws, min_width=8, max_width=60):
 def _write_row(ws, columns, record, row, start_col, border, bold=False):
     for offset, column in enumerate(columns):
         fieldtype = column.get("fieldtype")
-        cell = ws.cell(row=row, column=start_col + offset, value=_clean_value(record.get(column.get("fieldname")), fieldtype))
+        cell = set_cell_value(ws.cell(row=row, column=start_col + offset), record.get(column.get("fieldname")), fieldtype)
         cell.border = border
         if bold:
             cell.font = Font(bold=True)
         fmt = number_format(fieldtype)
         if fmt:
             cell.number_format = fmt
-
-
-def _clean_value(value, fieldtype):
-    if value is None or value == "":
-        return None
-    if isinstance(value, str):
-        if "<" in value:
-            value = strip_html_tags(value)
-        if fieldtype in ("Date", "Datetime"):
-            try:
-                return getdate(value) if fieldtype == "Date" else get_datetime(value)
-            except Exception:
-                return value
-    return value

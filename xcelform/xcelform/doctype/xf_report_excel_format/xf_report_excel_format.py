@@ -5,7 +5,7 @@ import frappe
 from frappe import _
 from frappe.model.document import Document
 
-from xcelform.core.sandbox import validate_script_syntax
+from xcelform.core.pipeline import validate_format
 from xcelform.sources.report import SUPPORTED_REPORT_TYPES
 
 
@@ -13,7 +13,7 @@ class XFReportExcelFormat(Document):
 	def validate(self):
 		self.validate_report_type()
 		self.validate_single_default()
-		validate_script_syntax(self.python_script)
+		validate_format(self, repeat_names=("data",))
 
 	def validate_report_type(self):
 		report_type = frappe.db.get_value("Report", self.report, "report_type")

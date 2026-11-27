@@ -3,11 +3,12 @@
 import frappe
 from frappe import _
 from frappe.utils import cint
-from frappe.utils.file_manager import save_file
 
-from xcelform.core.output import download_response, preview_response, safe_file_name, workbook_bytes
+from xcelform.core.output import download_response, preview_response, workbook_bytes
+from xcelform.core.pipeline import FORMAT_FIELDS, build_workbook, render_file_name
 from xcelform.core.preview import generate_excel_preview, rgb_to_hex  # noqa: F401 - kept for existing imports
-from xcelform.core.sandbox import run_format_script
+from xcelform.core.starter import build_starter_template
+from xcelform.sources.document import get_document, get_tables
 
 
 @frappe.whitelist()
@@ -16,20 +17,27 @@ def export_to_xf_excel(doctype, doc_name, excel_format=None, attach=False, downl
     if not (attach or download or is_preview):
         frappe.throw(_("Choose to attach, download or preview the Excel file."))
 
-    doc = frappe.get_doc(doctype, doc_name)
-    doc.check_permission("read")
-    if attach:
-        doc.check_permission("write")
-
-    script = get_format_script(doctype, excel_format)
-    wb = run_format_script(script, {"doc": doc}, script_name=excel_format or doctype)
-    file_name = f"XF_Excel_{doctype}_{doc_name}.xlsx"
+    doc = get_document(doctype, doc_name, for_write=attach)
+    fmt = get_document_format(doctype, excel_format)
+    context = {"doc": doc}
+    wb = build_workbook(fmt, context, get_tables(doc))
 
     if is_preview:
         return preview_response(wb)
 
+    file_name = render_file_name(fmt.file_name_pattern, context, f"XF_Excel_{doctype}_{doc_name}")
     if attach:
-        file_doc = save_file(safe_file_name(file_name), workbook_bytes(wb).getvalue(), doctype, doc_name, is_private=1)
+        file_doc = frappe.get_doc(
+            {
+                "doctype": "File",
+                "file_name": file_name,
+                "attached_to_doctype": doctype,
+                "attached_to_name": doc_name,
+                "is_private": 1,
+                "content": workbook_bytes(wb).getvalue(),
+            }
+        )
+        file_doc.save(ignore_permissions=True)
         return file_doc.file_url
 
     download_response(wb, file_name)
@@ -40,16 +48,23 @@ def get_default_excel_format(doctype):
     return frappe.db.get_value("XF Excel Format", {"doc_type": doctype, "is_default": 1, "enable": 1}, "name")
 
 
-def get_format_script(doctype, excel_format=None):
+@frappe.whitelist()
+def download_starter_template(doctype):
+    """An .xlsx with placeholders for the main fields and child tables of `doctype`, ready to restyle."""
+    frappe.has_permission("XF Excel Format", "create", throw=True)
+    download_response(build_starter_template(doctype), f"{doctype} template.xlsx")
+
+
+def get_document_format(doctype, excel_format=None):
     filters = {"doc_type": doctype, "enable": 1}
     if excel_format:
         filters["name"] = excel_format
     else:
         filters["is_default"] = 1
 
-    script = frappe.db.get_value("XF Excel Format", filters, "python_script")
-    if not script:
+    fmt = frappe.db.get_value("XF Excel Format", filters, FORMAT_FIELDS, as_dict=True)
+    if not fmt:
         if excel_format:
             frappe.throw(_("Excel Format {0} is not enabled for {1}.").format(excel_format, doctype))
         frappe.throw(_("No enabled default Excel Format is set for {0}.").format(doctype))
-    return script
+    return fmt

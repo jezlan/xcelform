@@ -9,6 +9,10 @@ frappe.ui.form.on("XF Report Excel Format", {
 	},
 
 	refresh(frm) {
+		const field = frm.get_field("template_file");
+		if (field) {
+			field.df.options = { restrictions: { allowed_file_types: [".xlsx"] } };
+		}
 		if (!frm.is_new() && frm.doc.report) {
 			frm.add_custom_button(__("Open Report"), () => {
 				frappe.set_route("query-report", frm.doc.report);

@@ -6,7 +6,7 @@ from frappe.desk.query_report import get_report_doc
 from frappe.utils import cint, nowdate
 
 from xcelform.core.output import download_response, preview_response
-from xcelform.core.sandbox import run_format_script
+from xcelform.core.pipeline import FORMAT_FIELDS, build_workbook, render_file_name
 from xcelform.sources.report import get_report_data
 
 
@@ -29,25 +29,22 @@ def export_report(report_name, filters=None, excel_format=None, is_preview=False
 
     Returns preview HTML when `is_preview` is set, otherwise sends the .xlsx file.
     """
-    script = get_report_format_script(report_name, excel_format)
+    fmt = get_report_format(report_name, excel_format)
     report = get_report_data(report_name, filters)
 
-    wb = run_format_script(
-        script,
-        {
-            "report_name": report.report_name,
-            "filters": report.filters,
-            "columns": report.columns,
-            "data": report.data,
-            "total_row": report.total_row,
-        },
-        script_name=excel_format or report_name,
-    )
+    context = {
+        "report_name": report.report_name,
+        "filters": report.filters,
+        "columns": report.columns,
+        "data": report.data,
+        "total_row": report.total_row,
+    }
+    wb = build_workbook(fmt, context, {"data": report.data})
 
     if cint(is_preview):
         return preview_response(wb)
 
-    download_response(wb, f"{report_name} {nowdate()}.xlsx")
+    download_response(wb, render_file_name(fmt.file_name_pattern, context, f"{report_name} {nowdate()}"))
 
 
 def can_open_report(report_name):
@@ -63,16 +60,16 @@ def can_open_report(report_name):
         frappe.flags.mute_messages = muted
 
 
-def get_report_format_script(report_name, excel_format=None):
+def get_report_format(report_name, excel_format=None):
     filters = {"report": report_name, "enabled": 1}
     if excel_format:
         filters["name"] = excel_format
     else:
         filters["is_default"] = 1
 
-    script = frappe.db.get_value("XF Report Excel Format", filters, "python_script")
-    if not script:
+    fmt = frappe.db.get_value("XF Report Excel Format", filters, FORMAT_FIELDS, as_dict=True)
+    if not fmt:
         if excel_format:
             frappe.throw(_("Excel Format {0} is not enabled for report {1}.").format(excel_format, report_name))
         frappe.throw(_("No enabled default Excel Format is set for report {0}.").format(report_name))
-    return script
+    return fmt

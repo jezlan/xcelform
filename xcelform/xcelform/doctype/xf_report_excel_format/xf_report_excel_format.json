@@ -13,6 +13,15 @@
   "column_break_settings",
   "enabled",
   "is_default",
+  "section_break_format",
+  "format_type",
+  "template_file",
+  "column_break_format",
+  "file_name_pattern",
+  "section_break_post_process",
+  "post_process_script",
+  "section_break_template_help",
+  "template_help",
   "section_break_script",
   "python_script",
   "section_break_help",
@@ -62,23 +71,85 @@
    "label": "Default for this Report"
   },
   {
+   "fieldname": "section_break_format",
+   "fieldtype": "Section Break",
+   "label": "Format"
+  },
+  {
+   "default": "Template",
+   "description": "Template: upload an Excel file with {{ placeholders }}. Script: build the sheet with Python.",
+   "fieldname": "format_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Format Type",
+   "options": "Template\nScript",
+   "reqd": 1
+  },
+  {
+   "depends_on": "eval:doc.format_type=='Template'",
+   "fieldname": "template_file",
+   "fieldtype": "Attach",
+   "label": "Excel Template (.xlsx)",
+   "mandatory_depends_on": "eval:doc.format_type=='Template'"
+  },
+  {
+   "fieldname": "column_break_format",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "For example {{ report_name }} {{ filters.from_date }}. Leave empty for the default name.",
+   "fieldname": "file_name_pattern",
+   "fieldtype": "Data",
+   "label": "File Name Pattern"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.format_type=='Template'",
+   "fieldname": "section_break_post_process",
+   "fieldtype": "Section Break",
+   "label": "Post-process Script (optional)"
+  },
+  {
+   "description": "Optional Python that runs after the template is filled, with the same variables as a script format (wb, ws, xf...). Use it for things a template can't do, such as adding a chart. Needs server scripts enabled.",
+   "fieldname": "post_process_script",
+   "fieldtype": "Code",
+   "label": "Post-process Script",
+   "options": "Python"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.format_type=='Template'",
+   "fieldname": "section_break_template_help",
+   "fieldtype": "Section Break",
+   "label": "Template Help"
+  },
+  {
+   "fieldname": "template_help",
+   "fieldtype": "HTML",
+   "label": "Template Help",
+   "options": "<h4>How a template works</h4><p>Design the file in Excel or LibreOffice, type placeholders into the cells, then upload it here. Column fieldnames are shown in the report's <b>Pick Columns</b> menu, or in the script report's code.</p><table class='table table-bordered'><tbody><tr><td style='width:40%'><code>{{ data.amount }}</code></td><td>A report column, by its fieldname. The row repeats once per report row.</td></tr><tr><td style='width:40%'><code>{{ filters.company }}</code></td><td>A filter value applied on the report.</td></tr><tr><td style='width:40%'><code>{{ total_row.amount }}</code></td><td>The report's total row (when the report has one).</td></tr><tr><td style='width:40%'><code>{{ report_name }}</code></td><td>The report's name.</td></tr><tr><td style='width:40%'><code>{{ data|length }}</code></td><td>Number of report rows (in a normal cell).</td></tr></tbody></table><p>Everything else in the file is kept: styles, merged cells, column widths, number formats, formulas, conditional formatting, dropdowns, images and print settings. When rows repeat, everything below moves down and formulas follow, so <code>=SUM(D5:D5)</code> under a repeating row 5 becomes <code>=SUM(D5:D7)</code> for three rows.</p><p>Shapes, text boxes, SmartArt, pivot tables and macros are not kept. You'll see a warning when you save if the file has them.</p>"
+  },
+  {
+   "depends_on": "eval:doc.format_type=='Script'",
    "fieldname": "section_break_script",
    "fieldtype": "Section Break",
    "label": "Script"
   },
   {
    "default": "# Available: report_name, filters, columns, data, total_row, wb, ws, xf, frappe\nws.title = \"Report\"\nws[\"A1\"] = report_name\nws[\"A1\"].font = Font(bold=True, size=14)\n\napplied = [str(key) + \": \" + str(value) for key, value in filters.items() if value]\nws[\"A2\"] = \", \".join(applied)\n\nxf.write_table(ws, columns, data, start_row=4, total_row=total_row)\nxf.autofit_columns(ws)\n",
+   "depends_on": "eval:doc.format_type=='Script'",
    "fieldname": "python_script",
    "fieldtype": "Code",
    "label": "Python Script",
-   "options": "Python",
-   "reqd": 1
+   "mandatory_depends_on": "eval:doc.format_type=='Script'",
+   "options": "Python"
   },
   {
    "collapsible": 1,
+   "depends_on": "eval:doc.format_type=='Script'",
    "fieldname": "section_break_help",
    "fieldtype": "Section Break",
-   "label": "Help"
+   "label": "Script Help"
   },
   {
    "fieldname": "script_help",
@@ -90,7 +161,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2026-11-27 10:38:13.095353",
+ "modified": "2026-11-27 20:57:24.253427",
  "modified_by": "Administrator",
  "module": "XcelForm",
  "name": "XF Report Excel Format",

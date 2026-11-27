@@ -11,10 +11,17 @@
   "column_break_tsae",
   "enable",
   "is_default",
-  "custom_format",
+  "section_break_format",
+  "format_type",
+  "template_file",
+  "column_break_format",
+  "file_name_pattern",
+  "section_break_post_process",
+  "post_process_script",
+  "section_break_template_help",
+  "template_help",
   "section_break_hxbh",
   "python_script",
-  "notice",
   "section_break_rtyw",
   "xf_excel_format_help"
  ],
@@ -30,8 +37,10 @@
   {
    "fieldname": "doc_type",
    "fieldtype": "Link",
+   "in_list_view": 1,
    "label": "Doctype",
-   "options": "DocType"
+   "options": "DocType",
+   "reqd": 1
   },
   {
    "fieldname": "column_break_tsae",
@@ -41,6 +50,7 @@
    "default": "0",
    "fieldname": "enable",
    "fieldtype": "Check",
+   "in_list_view": 1,
    "label": "Enable"
   },
   {
@@ -50,35 +60,87 @@
    "label": "Is Default "
   },
   {
-   "default": "1",
-   "fieldname": "custom_format",
-   "fieldtype": "Check",
-   "label": "Custom Format"
+   "fieldname": "section_break_format",
+   "fieldtype": "Section Break",
+   "label": "Format"
   },
   {
-   "fieldname": "section_break_hxbh",
-   "fieldtype": "Section Break"
+   "default": "Template",
+   "description": "Template: upload an Excel file with {{ placeholders }}. Script: build the sheet with Python.",
+   "fieldname": "format_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "Format Type",
+   "options": "Template\nScript",
+   "reqd": 1
   },
   {
-   "depends_on": "eval:doc.custom_format == 1",
-   "fieldname": "python_script",
+   "depends_on": "eval:doc.format_type=='Template'",
+   "fieldname": "template_file",
+   "fieldtype": "Attach",
+   "label": "Excel Template (.xlsx)",
+   "mandatory_depends_on": "eval:doc.format_type=='Template'"
+  },
+  {
+   "fieldname": "column_break_format",
+   "fieldtype": "Column Break"
+  },
+  {
+   "description": "For example {{ doc.name }}-{{ doc.customer }}. Leave empty for the default name.",
+   "fieldname": "file_name_pattern",
+   "fieldtype": "Data",
+   "label": "File Name Pattern"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.format_type=='Template'",
+   "fieldname": "section_break_post_process",
+   "fieldtype": "Section Break",
+   "label": "Post-process Script (optional)"
+  },
+  {
+   "description": "Optional Python that runs after the template is filled, with the same variables as a script format (wb, ws, xf...). Use it for things a template can't do, such as adding a chart. Needs server scripts enabled.",
+   "fieldname": "post_process_script",
    "fieldtype": "Code",
-   "label": "Python Script",
+   "label": "Post-process Script",
    "options": "Python"
   },
   {
-   "depends_on": "eval:doc.custom_format == 0",
-   "fieldname": "notice",
+   "collapsible": 1,
+   "depends_on": "eval:doc.format_type=='Template'",
+   "fieldname": "section_break_template_help",
+   "fieldtype": "Section Break",
+   "label": "Template Help"
+  },
+  {
+   "fieldname": "template_help",
    "fieldtype": "HTML",
-   "label": "Coming Soon ",
-   "options": "<strong style=\"color: #ff8c00; font-size: 14px;\">Coming Soon!</strong>\n<span style=\"color: #444; font-size: 13px; margin-left: 5px;\">\n    A feature to import or auto-generate formats will be available soon. Stay tuned for updates!\n</span>\n"
+   "label": "Template Help",
+   "options": "<h4>How a template works</h4><p>Design the file in Excel or LibreOffice the way the client wants it, type placeholders into the cells, then upload it here. Use <b>Download Starter Template</b> to get a file with this doctype's fields already in place.</p><table class='table table-bordered'><tbody><tr><td style='width:40%'><code>{{ doc.customer_name }}</code></td><td>The field's value. If the cell holds only this, numbers and dates stay real numbers and dates, shown with the cell's Excel number format.</td></tr><tr><td style='width:40%'><code>Invoice {{ doc.name }} for {{ doc.customer }}</code></td><td>Text mixed with values.</td></tr><tr><td style='width:40%'><code>{{ items.qty }}</code></td><td><code>items</code> is a child table, so this row repeats once per item. Every cell in a repeating row should use the same table.</td></tr><tr><td style='width:40%'><code>{{ items|length }}</code></td><td>Number of rows in a child table (in a normal cell).</td></tr><tr><td style='width:40%'><code>{{ doc.items[0].item_code }}</code></td><td>One specific child row.</td></tr><tr><td style='width:40%'><code>{{ frappe.db.get_value(\"Customer\", doc.customer, \"tax_id\") }}</code></td><td>A value from another document, the same as in print formats.</td></tr><tr><td style='width:40%'><code>{{ frappe.format(doc.grand_total, {\"fieldtype\": \"Currency\"}) }}</code></td><td>A formatted value, as text.</td></tr></tbody></table><p>Everything else in the file is kept: styles, merged cells, column widths, number formats, formulas, conditional formatting, dropdowns, images and print settings. When rows repeat, everything below moves down and formulas follow, so <code>=SUM(D5:D5)</code> under a repeating row 5 becomes <code>=SUM(D5:D7)</code> for three rows.</p><p>Shapes, text boxes, SmartArt, pivot tables and macros are not kept. You'll see a warning when you save if the file has them.</p>"
   },
   {
+   "depends_on": "eval:doc.format_type=='Script'",
+   "fieldname": "section_break_hxbh",
+   "fieldtype": "Section Break",
+   "label": "Script"
+  },
+  {
+   "depends_on": "eval:doc.format_type=='Script'",
+   "fieldname": "python_script",
+   "fieldtype": "Code",
+   "label": "Python Script",
+   "mandatory_depends_on": "eval:doc.format_type=='Script'",
+   "options": "Python"
+  },
+  {
+   "collapsible": 1,
+   "depends_on": "eval:doc.format_type=='Script'",
    "fieldname": "section_break_rtyw",
-   "fieldtype": "Section Break"
+   "fieldtype": "Section Break",
+   "label": "Script Help"
   },
   {
-   "depends_on": "eval:doc.custom_format == 1 ",
+   "depends_on": "eval:doc.format_type=='Script'",
    "fieldname": "xf_excel_format_help",
    "fieldtype": "HTML",
    "label": "XF Excel Format Help",
@@ -88,7 +150,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-03-23 21:47:13.656450",
+ "modified": "2026-11-27 20:57:24.253427",
  "modified_by": "Administrator",
  "module": "XcelForm",
  "name": "XF Excel Format",

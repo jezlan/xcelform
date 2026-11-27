@@ -23,6 +23,31 @@ You are welcome to **test, explore, and contribute**! 🚀
 🧪 **Excel Preview feature** to test the format before export (**🔬 In Testing Stage**)  
 ✅ **Attach or Download Excel:** Option to attach Excel to the document or directly download it  
 ✅ **Report Export:** Export Script, Query and Custom Reports to Excel with your own format, using the filters applied on screen  
+✅ **Excel Templates (no code):** Upload the client's own Excel file with `{{ placeholders }}` and XcelForm fills in the values  
+
+---
+
+## 🧩 **Excel Templates (no code)**
+Design the file in Excel or LibreOffice exactly as the client wants it, type placeholders into the cells, and upload it.
+
+1. Open **XF Excel Format** → **New**, pick the **Doctype**, keep **Format Type** = *Template*.
+2. Click **Download Starter Template** to get an `.xlsx` with the doctype's fields and child tables already filled in, or use the client's own file.
+3. Restyle it in Excel, then upload it in **Excel Template (.xlsx)** and save. XcelForm lists the placeholders it found and any cell that names a field that doesn't exist.
+4. Export from the document's **XF Excel Export** button as usual.
+
+| Write this in a cell | Result |
+|---|---|
+| `{{ doc.grand_total }}` | The real value. Numbers and dates stay numbers and dates, shown with the cell's own Excel number format |
+| `Invoice {{ doc.name }} for {{ doc.customer }}` | Text mixed with values |
+| `{{ items.qty }}` | The row repeats once per row of the `items` child table |
+| `{{ items\|length }}`, `{{ doc.items[0].item_code }}` | The whole table or one row of it, in a normal cell |
+| `{{ frappe.db.get_value("Customer", doc.customer, "tax_id") }}` | A value from another document, as in print formats |
+
+When rows repeat, everything below moves down and formulas follow: `=SUM(D5:D5)` under a repeating row 5 becomes `=SUM(D5:D7)` for three items. Merged cells, row heights, conditional formatting, dropdowns, images and the print area move too. A table with no rows leaves one blank row.
+
+For reports, use `{{ data.<fieldname> }}` for the repeating report rows, `{{ filters.company }}`, `{{ total_row.amount }}` and `{{ report_name }}`.
+
+Optional extras on every format: a **File Name Pattern** such as `{{ doc.name }}-{{ doc.customer }}`, and a **Post-process Script** that runs after the template is filled (for example, to add a chart). Shapes, text boxes, SmartArt, pivot tables and macros are not kept; you get a warning on save if the file has them. Formats created before templates existed are set to *Script* automatically on `bench migrate`.
 
 ---
 
@@ -39,7 +64,7 @@ bench --site your-site-name install-app xcelform
 bench set-config -g server_script_enabled 1
 ```
 
-Excel format scripts run in Frappe's sandbox, the same one Server Scripts use. Inside a script you can use `doc`, `wb`, `ws`, `frappe` (the safe version), and the openpyxl helpers `Font`, `Alignment`, `Border`, `Side`, `PatternFill`, `Image` and `get_column_letter`. Imports are limited to `from openpyxl... import Name`.
+Template formats need nothing extra. Script formats (and post-process scripts) run in Frappe's sandbox, the same one Server Scripts use. Inside a script you can use `doc`, `wb`, `ws`, `frappe` (the safe version), and the openpyxl helpers `Font`, `Alignment`, `Border`, `Side`, `PatternFill`, `Image` and `get_column_letter`. Imports are limited to `from openpyxl... import Name`.
 
 ---
 

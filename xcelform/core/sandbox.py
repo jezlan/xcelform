@@ -17,11 +17,12 @@ from RestrictedPython import compile_restricted, safe_builtins
 from xcelform.core import helpers
 
 
-def run_format_script(script, context, script_name=None):
+def run_format_script(script, context, script_name=None, wb=None):
     """Run an Excel format script in Frappe's sandbox and return the workbook it built.
 
     Scripts get `wb`, `ws`, the openpyxl style helpers, the `xf` helpers and the safe
     `frappe` namespace, plus everything in `context` (for example `doc` or `data`).
+    Pass `wb` to let the script change an existing workbook, such as a filled template.
     """
     if not frappe_safe_exec.is_safe_exec_enabled():
         frappe.throw(
@@ -32,7 +33,7 @@ def run_format_script(script, context, script_name=None):
             title=_("Excel format scripts are disabled"),
         )
 
-    wb = openpyxl.Workbook()
+    wb = wb or openpyxl.Workbook()
     script_globals = {
         "__builtins__": {**safe_builtins, "__import__": _import_openpyxl_names},
         "wb": wb,
