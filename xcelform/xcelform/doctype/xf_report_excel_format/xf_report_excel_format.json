@@ -1,0 +1,120 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "field:name1",
+ "creation": "2026-11-27 10:38:13.095353",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "name1",
+  "report",
+  "report_type",
+  "column_break_settings",
+  "enabled",
+  "is_default",
+  "section_break_script",
+  "python_script",
+  "section_break_help",
+  "script_help"
+ ],
+ "fields": [
+  {
+   "fieldname": "name1",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Format Name",
+   "reqd": 1,
+   "unique": 1
+  },
+  {
+   "fieldname": "report",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "Report",
+   "options": "Report",
+   "reqd": 1
+  },
+  {
+   "fetch_from": "report.report_type",
+   "fieldname": "report_type",
+   "fieldtype": "Data",
+   "label": "Report Type",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_settings",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "1",
+   "fieldname": "enabled",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Enabled"
+  },
+  {
+   "default": "0",
+   "fieldname": "is_default",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "Default for this Report"
+  },
+  {
+   "fieldname": "section_break_script",
+   "fieldtype": "Section Break",
+   "label": "Script"
+  },
+  {
+   "default": "# Available: report_name, filters, columns, data, total_row, wb, ws, xf, frappe\nws.title = \"Report\"\nws[\"A1\"] = report_name\nws[\"A1\"].font = Font(bold=True, size=14)\n\napplied = [str(key) + \": \" + str(value) for key, value in filters.items() if value]\nws[\"A2\"] = \", \".join(applied)\n\nxf.write_table(ws, columns, data, start_row=4, total_row=total_row)\nxf.autofit_columns(ws)\n",
+   "fieldname": "python_script",
+   "fieldtype": "Code",
+   "label": "Python Script",
+   "options": "Python",
+   "reqd": 1
+  },
+  {
+   "collapsible": 1,
+   "fieldname": "section_break_help",
+   "fieldtype": "Section Break",
+   "label": "Help"
+  },
+  {
+   "fieldname": "script_help",
+   "fieldtype": "HTML",
+   "label": "Script Help",
+   "options": "<h4>Report Excel Format help</h4>\n<p>The script runs in Frappe's server-script sandbox each time someone exports the report. It must build the workbook in <code>wb</code>.</p>\n<table class=\"table table-bordered\">\n<tbody>\n<tr><td style=\"width:30%\"><code>report_name</code></td><td>Name of the report being exported</td></tr>\n<tr><td><code>filters</code></td><td>Filter values the user applied, as a dict</td></tr>\n<tr><td><code>columns</code></td><td>List of dicts with <code>fieldname</code>, <code>label</code>, <code>fieldtype</code>, <code>options</code>, <code>width</code></td></tr>\n<tr><td><code>data</code></td><td>Report rows, as a list of dicts keyed by fieldname (total row removed)</td></tr>\n<tr><td><code>total_row</code></td><td>The report's total row as a dict, or <code>None</code></td></tr>\n<tr><td><code>wb</code>, <code>ws</code></td><td>The openpyxl workbook and its active sheet</td></tr>\n<tr><td><code>Font</code>, <code>Alignment</code>, <code>Border</code>, <code>Side</code>, <code>PatternFill</code>, <code>Image</code>, <code>get_column_letter</code></td><td>openpyxl helpers. Other openpyxl names can be imported with <code>from openpyxl... import Name</code></td></tr>\n<tr><td><code>xf.write_table(ws, columns, data, start_row=1, start_col=1, total_row=None, header=True)</code></td><td>Writes a styled table with number and date formats. Returns the first empty row after it</td></tr>\n<tr><td><code>xf.autofit_columns(ws)</code></td><td>Sets column widths from their content</td></tr>\n<tr><td><code>xf.number_format(fieldtype)</code></td><td>Excel number format for a Frappe fieldtype</td></tr>\n<tr><td><code>frappe</code></td><td>The same safe <code>frappe</code> object Server Scripts use</td></tr>\n</tbody>\n</table>\n<p>Supported report types: Script Report, Query Report and Custom Report.</p>"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2026-11-27 10:38:13.095353",
+ "modified_by": "Administrator",
+ "module": "XcelForm",
+ "name": "XF Report Excel Format",
+ "naming_rule": "By fieldname",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "rows_threshold_for_grid_search": 20,
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": [],
+ "title_field": "name1",
+ "track_changes": 1
+}
