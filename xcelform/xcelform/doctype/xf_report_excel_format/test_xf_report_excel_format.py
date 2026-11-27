@@ -1,11 +1,12 @@
 # Copyright (c) 2026, Muhamed Jezlan and Contributors
 # See license.txt
 
+import os
 from io import BytesIO
 from unittest.mock import patch
 
 import frappe
-from openpyxl import load_workbook
+from openpyxl import Workbook, load_workbook
 
 try:
     from frappe.tests import IntegrationTestCase
@@ -70,7 +71,7 @@ class TestXFReportExcelFormat(IntegrationTestCase):
         frappe.set_user("Administrator")
         frappe.db.rollback()
 
-    def make_format(self, name, report=QUERY_REPORT, is_default=0, enabled=1, script=SCRIPT):
+    def make_format(self, name, report=QUERY_REPORT, is_default=0, enabled=1, script=SCRIPT, **kwargs):
         return frappe.get_doc(
             {
                 "doctype": "XF Report Excel Format",
@@ -78,7 +79,9 @@ class TestXFReportExcelFormat(IntegrationTestCase):
                 "report": report,
                 "enabled": enabled,
                 "is_default": is_default,
+                "format_type": "Script",
                 "python_script": script,
+                **kwargs,
             }
         ).insert()
 
@@ -175,6 +178,36 @@ class TestXFReportExcelFormat(IntegrationTestCase):
     def test_report_builder_reports_are_rejected(self):
         with self.assertRaises(frappe.ValidationError):
             self.make_format("_Test XF Builder Format", report="Document Share Report")
+
+    def test_template_format_repeats_report_rows(self):
+        wb = Workbook()
+        ws = wb.active
+        ws["A1"], ws["B1"] = "{{ report_name }}", "{{ data|length }} rows"
+        ws["A3"], ws["B3"], ws["C3"] = "{{ data.description }}", "{{ data.count }}", "{{ data.date }}"
+        ws["C3"].number_format = "dd/mm/yyyy"
+        ws["A4"], ws["B4"], ws["C4"] = "Total", "=SUM(B3:B3)", "{{ total_row.count }}"
+        output = BytesIO()
+        wb.save(output)
+        template = frappe.get_doc(
+            {"doctype": "File", "file_name": "_test_xf_report_template.xlsx", "is_private": 1, "content": output.getvalue()}
+        ).insert()
+        self.addCleanup(lambda: os.path.exists(template.get_full_path()) and os.remove(template.get_full_path()))
+
+        self.make_format(
+            "_Test XF Template Format",
+            format_type="Template",
+            template_file=template.file_url,
+            python_script=None,
+            file_name_pattern="{{ report_name }} export",
+        )
+        response = self.download(excel_format="_Test XF Template Format")
+
+        self.assertEqual(response.filename, f"{QUERY_REPORT} export.xlsx")
+        ws = load_workbook(BytesIO(response.filecontent)).active
+        self.assertEqual([ws["A1"].value, ws["B1"].value], [QUERY_REPORT, "2 rows"])
+        self.assertCountEqual([ws["A3"].value, ws["A4"].value], ["_Test XF row one", "_Test XF row two"])
+        self.assertEqual([ws["B3"].value, ws["C3"].number_format], [1, "dd/mm/yyyy"])
+        self.assertEqual([ws["A5"].value, ws["B5"].value, ws["C5"].value], ["Total", "=SUM(B3:B4)", 2])
 
     def test_script_syntax_is_checked_on_save(self):
         with self.assertRaises(frappe.ValidationError) as ctx:
