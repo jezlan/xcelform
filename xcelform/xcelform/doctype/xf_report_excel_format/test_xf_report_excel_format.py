@@ -27,7 +27,7 @@ select
     date as `Date:Date:100`
 from `tabToDo`
 where description like '%%_Test XF row%%'
-order by name
+order by description
 """
 SCRIPT = """
 ws["A1"] = report_name
@@ -96,7 +96,7 @@ class TestXFReportExcelFormat(IntegrationTestCase):
         self.assertEqual(report.columns[0]["fieldtype"], "Link")
         self.assertEqual(report.columns[0]["options"], "ToDo")
         self.assertEqual(report.columns[3]["fieldtype"], "Int")
-        self.assertEqual([row["id"] for row in report.data], sorted(t.name for t in self.todos))
+        self.assertCountEqual([row["id"] for row in report.data], [t.name for t in self.todos])
 
     def test_total_row_is_separated_from_data(self):
         report = get_report_data(QUERY_REPORT, "{}")
@@ -131,7 +131,8 @@ class TestXFReportExcelFormat(IntegrationTestCase):
         self.assertEqual(ws["A1"].value, QUERY_REPORT)
         self.assertEqual([ws.cell(row=3, column=c).value for c in range(1, 6)], ["ID", "Description", "Priority", "Count", "Date"])
         self.assertTrue(ws["A3"].font.bold)
-        self.assertEqual(ws["B5"].value, "_Test XF row two")  # HTML tags stripped
+        # ToDo names are random, so don't rely on which row comes first. HTML tags are stripped.
+        self.assertCountEqual([ws["B4"].value, ws["B5"].value], ["_Test XF row one", "_Test XF row two"])
         self.assertEqual(ws["E4"].number_format, number_format("Date"))
         self.assertEqual(ws["D6"].value, 2)  # total row
         self.assertTrue(ws["D6"].font.bold)
